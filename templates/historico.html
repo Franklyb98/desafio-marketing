@@ -1,45 +1,127 @@
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <title>Histórico de envios</title>
-   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico | Marketing Insights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
-    <p><a href="/historico">Consultar histórico de simulações</a></p>
 
-    <a href="/agendamentos">← Voltar para agendamentos</a>
+    <div class="container">
 
-    <h1>Histórico de simulações</h1>
+        <header class="dashboard-header">
+            <div>
+                <h1>Marketing Insights</h1>
+                <p>Gerenciamento de campanhas e mensagens</p>
+            </div>
 
-    {% for item in historico %}
-        <div>
-            <h3>{{ item.nome_completo }}</h3>
+            <nav class="navigation">
+                <a href="/">Clientes</a>
+                <a href="/agendamentos">Agendamentos</a>
+                <a href="/historico" class="nav-active">Histórico</a>
+            </nav>
+        </header>
 
-            <p>Trilha: {{ item.trilha }}</p>
-            <p>Mensagem: {{ item.mensagem }}</p>
-            <p>Telefone: {{ item.telefone }}</p>
-            <p>Data: {{ item.data_simulacao }}</p>
-            <p>Status: {{ item.status }}</p>
+        <section class="welcome-section">
+            <h2>Histórico de simulações</h2>
+            <p>Consulte as mensagens simuladas e os dados das requisições preparadas.</p>
+        </section>
 
-            <details>
-                <summary>Ver requisição simulada</summary>
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total de simulações</span>
+                <h2>{{ historico|length }}</h2>
+                <span class="stat-description">Registros armazenados</span>
+            </div>
+        </section>
 
-                <p>Endpoint: {{ item.endpoint }}</p>
-                <p>Método: {{ item.metodo }}</p>
+        <section class="history-list">
 
-                <h4>Headers</h4>
-                <pre>{{ item.headers_json }}</pre>
+            {% for item in historico %}
 
-                <h4>Body</h4>
-                <pre>{{ item.body_json }}</pre>
-            </details>
-        </div>
-        <hr>
-    {% else %}
-        <p>Nenhuma simulação registrada.</p>
-    {% endfor %}
+            <article class="card history-card">
+
+                <div class="history-header">
+                    <div>
+                        <h3>{{ item.nome_completo }}</h3>
+                        <span class="track-label">{{ item.trilha }}</span>
+                    </div>
+
+                    <span class="status-indicator status-confirmed">
+                        {{ item.status }}
+                    </span>
+                </div>
+
+                <div class="history-details">
+
+                    <div class="detail-item">
+                        <span class="detail-label">Telefone</span>
+                        <strong>{{ item.telefone }}</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Data da simulação</span>
+                        <strong>{{ item.data_simulacao }}</strong>
+                    </div>
+
+                </div>
+
+                <div class="message-preview">
+                    <span class="detail-label">Mensagem preparada</span>
+                    <p>{{ item.mensagem }}</p>
+                </div>
+
+                <details class="request-details">
+                    <summary>Ver requisição simulada</summary>
+
+                    <div class="request-content">
+
+                        <div class="request-info">
+                            <span class="detail-label">Endpoint</span>
+                            <code>{{ item.endpoint }}</code>
+                        </div>
+
+                        <div class="request-info">
+                            <span class="detail-label">Método HTTP</span>
+                            <code>{{ item.metodo }}</code>
+                        </div>
+
+                        <div class="request-info">
+                            <span class="detail-label">Headers</span>
+                            <pre>{{ item.headers_json }}</pre>
+                        </div>
+
+                        <div class="request-info">
+                            <span class="detail-label">Body</span>
+                            <pre>{{ item.body_json }}</pre>
+                        </div>
+
+                    </div>
+                </details>
+
+            </article>
+
+            {% else %}
+
+            <div class="card empty-history">
+                <h3>Nenhuma simulação registrada</h3>
+                <p>Quando uma mensagem for simulada, ela aparecerá aqui.</p>
+                <a href="/agendamentos">Ir para agendamentos</a>
+            </div>
+
+            {% endfor %}
+
+        </section>
+
+        <footer class="dashboard-footer">
+            <p>Marketing Insights | Sistema de campanhas de marketing</p>
+        </footer>
+
+    </div>
 
 </body>
 </html>

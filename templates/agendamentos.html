@@ -1,70 +1,172 @@
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <title>Próximos envios</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos | Marketing Insights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
 
-    <a href="/">← Voltar para clientes</a>
+    <div class="container">
 
-    <h1>Próximos envios</h1>
-    {% with mensagens = get_flashed_messages() %}
-        {% for mensagem in mensagens %}
-            <p>{{ mensagem }}</p>
-        {% endfor %}
-    {% endwith %}
+        <header class="dashboard-header">
+            <div>
+                <h1>Marketing Insights</h1>
+                <p>Gerenciamento de campanhas e mensagens</p>
+            </div>
 
-    <p>
-        <a href="/historico">Consultar histórico de simulações</a>
-    </p>
+            <nav class="navigation">
+                <a href="/">Clientes</a>
+                <a href="/agendamentos" class="nav-active">Agendamentos</a>
+                <a href="/historico">Histórico</a>
+            </nav>
+        </header>
 
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>Cliente</th>
-                <th>Telefone</th>
-                <th>Trilha</th>
-                <th>Mensagem</th>
-                <th>Data de envio</th>
-                <th>Status</th>
-                <th>Ação</th>
-            </tr>
-        </thead>
+        <section class="welcome-section">
+            <h2>Próximos envios</h2>
+            <p>Acompanhe as mensagens programadas para os clientes.</p>
+        </section>
 
-        <tbody>
-            {% for item in agendamentos %}
-            <tr>
-                <td>{{ item.nome_completo }}</td>
-                <td>{{ item.telefone }}</td>
-                <td>{{ item.trilha }}</td>
-                <td>{{ item.mensagem }}</td>
-                <td>{{ item.data_envio }}</td>
-                <td>{{ item.status }}</td>
-
-                <td>
-                    {% if item.status == "Pendente" %}
-                        <form method="POST"
-                              action="/simular-envio/{{ item.id }}">
-                            <button type="submit">
-                                Simular envio
-                            </button>
-                        </form>
-                    {% else %}
-                        Já simulado
-                    {% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="7">Nenhum envio agendado.</td>
-            </tr>
+        <!-- Mensagens de retorno -->
+        {% with mensagens = get_flashed_messages() %}
+            {% for mensagem in mensagens %}
+                <div class="flash-message">
+                    {{ mensagem }}
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        {% endwith %}
 
-    <p>Total de mensagens agendadas: {{ agendamentos|length }}</p>
+        <!-- Indicadores -->
+        {% set pendentes = agendamentos | selectattr('status', 'equalto', 'Pendente') | list %}
+        {% set simulados = agendamentos | selectattr('status', 'equalto', 'Simulado') | list %}
+
+        <section class="stats-grid stats-three">
+
+            <div class="stat-card">
+                <span class="stat-label">Total de mensagens</span>
+                <h2>{{ agendamentos|length }}</h2>
+                <span class="stat-description">Mensagens programadas</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Pendentes</span>
+                <h2 class="number-warning">{{ pendentes|length }}</h2>
+                <span class="stat-description">Aguardando simulação</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Simuladas</span>
+                <h2 class="number-success">{{ simulados|length }}</h2>
+                <span class="stat-description">Simulações registradas</span>
+            </div>
+
+        </section>
+
+        <!-- Tabela -->
+        <section class="card">
+
+            <div class="section-header">
+                <h2>Programação de mensagens</h2>
+                <p>Visualize os detalhes e simule os envios pendentes.</p>
+            </div>
+
+            <div class="table-container">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Telefone</th>
+                            <th>Trilha</th>
+                            <th>Mensagem</th>
+                            <th>Data de envio</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in agendamentos %}
+                        <tr>
+                            <td>
+                                <a href="/cliente/{{ item.cliente_id }}" class="client-link">
+                                    {{ item.nome_completo }}
+                                </a>
+                            </td>
+
+                            <td>{{ item.telefone }}</td>
+
+                            <td>
+                                <span class="track-label">
+                                    {{ item.trilha }}
+                                </span>
+                            </td>
+
+                            <td class="message-cell">
+                                {{ item.mensagem }}
+                            </td>
+
+                            <td>{{ item.data_envio }}</td>
+
+                            <td>
+                                {% if item.status == "Pendente" %}
+                                    <span class="status-indicator status-pending">
+                                        Pendente
+                                    </span>
+                                {% else %}
+                                    <span class="status-indicator status-confirmed">
+                                        Simulado
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item.status == "Pendente" %}
+                                    <form method="POST"
+                                          action="/simular-envio/{{ item.id }}">
+
+                                        <button type="submit" class="simulate-button">
+                                            Simular envio
+                                        </button>
+
+                                    </form>
+                                {% else %}
+                                    <span class="already-simulated">
+                                        Já simulado
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                Nenhum envio agendado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+
+            </div>
+
+            <p class="table-footer">
+                Exibindo {{ agendamentos|length }} mensagem(ns).
+            </p>
+
+        </section>
+
+        <footer class="dashboard-footer">
+            <p>Marketing Insights | Sistema de campanhas de marketing</p>
+        </footer>
+
+    </div>
 
 </body>
 </html>
