@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Clientes - Marketing</title>
+</head>
+
+<body>
+
+    <h1>Clientes cadastrados</h1>
+    <p>
+        <a href="/agendamentos">Vizualizar próximos envios</a>
+    </p>
+
+    <form method="GET">
+        <label for="trilha">Filtrar por trilha:</label>
+
+        <select name="trilha" id="trilha">
+            <option value="">Todas as trilhas</option>
+            <option value="Alto valor">Alto valor</option>
+            <option value="Compra em quantidade">Compra em quantidade</option>
+            <option value="Incentivo">Incentivo</option>
+            <option value="Público jovem">Público jovem</option>
+            <option value="Geral">Geral</option>
+        </select>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <hr>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Idade</th>
+                <th>Estado</th>
+                <th>Valor total</th>
+                <th>Itens</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td>{{ cliente.id }}</td>
+                <td>
+                    <a href="/cliente/{{ cliente.id }}">
+                        {{ cliente.nome_completo }}
+                    </a>
+                </td>
+                <td>{{ cliente.idade }}</td>
+                <td>{{ cliente.estado }}</td>
+                <td>R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}</td>
+                <td>{{ cliente.quantidade_total_itens }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>Total de clientes exibidos: {{ clientes|length }}</p>
+
+</body>
+
+</html>

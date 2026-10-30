@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Próximos envios</title>
+</head>
+<body>
+
+    <a href="/">← Voltar para clientes</a>
+
+    <h1>Próximos envios</h1>
+    {% with mensagens = get_flashed_messages() %}
+        {% for mensagem in mensagens %}
+            <p>{{ mensagem }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <p>
+        <a href="/historico">Consultar histórico de simulações</a>
+    </p>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Telefone</th>
+                <th>Trilha</th>
+                <th>Mensagem</th>
+                <th>Data de envio</th>
+                <th>Status</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in agendamentos %}
+            <tr>
+                <td>{{ item.nome_completo }}</td>
+                <td>{{ item.telefone }}</td>
+                <td>{{ item.trilha }}</td>
+                <td>{{ item.mensagem }}</td>
+                <td>{{ item.data_envio }}</td>
+                <td>{{ item.status }}</td>
+
+                <td>
+                    {% if item.status == "Pendente" %}
+                        <form method="POST"
+                              action="/simular-envio/{{ item.id }}">
+                            <button type="submit">
+                                Simular envio
+                            </button>
+                        </form>
+                    {% else %}
+                        Já simulado
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">Nenhum envio agendado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>Total de mensagens agendadas: {{ agendamentos|length }}</p>
+
+</body>
+</html>

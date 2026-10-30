@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do cliente</title>
+</head>
+
+<body>
+
+    <a href="/">← Voltar para clientes</a>
+
+    <h1>{{ cliente.nome_completo }}</h1>
+
+    <h2>Dados do cliente</h2>
+
+    <p><strong>ID:</strong> {{ cliente.id }}</p>
+    <p><strong>Idade:</strong> {{ cliente.idade }}</p>
+    <p><strong>Sexo:</strong> {{ cliente.sexo }}</p>
+    <p><strong>Estado:</strong> {{ cliente.estado }}</p>
+    <p><strong>Telefone:</strong> {{ cliente.telefone }}</p>
+    <p><strong>Valor total:</strong> R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}</p>
+    <p><strong>Quantidade de itens:</strong> {{ cliente.quantidade_total_itens }}</p>
+
+    <hr>
+
+
+    <h2>Trilhas sugeridas e confirmação</h2>
+
+    <form method="POST" action="/cliente/{{ cliente.id }}/confirmar">
+
+        {% for trilha in trilhas %}
+        <div>
+            <label>
+                <input type="checkbox" name="trilhas" value="{{ trilha.trilha }}" {% if trilha.trilha in
+                    (trilhas_confirmadas | map(attribute='trilha' ) | list) or (not decisao and not trilhas_confirmadas)
+                    %} checked {% endif %}>
+                <strong>{{ trilha.trilha }}</strong>
+            </label>
+
+            <p>Prioridade: {{ trilha.prioridade }}</p>
+            <p>Motivo: {{ trilha.motivo }}</p>
+        </div>
+        <hr>
+        {% endfor %}
+
+        <h3>Adicionar outras trilhas</h3>
+
+        {% set existentes = trilhas | map(attribute='trilha') | list %}
+
+        {% for nome in ["Alto valor", "Compra em quantidade", "Incentivo", "Público jovem", "Geral"] %}
+        {% if nome not in existentes %}
+        <label>
+            <input type="checkbox" name="trilhas" value="{{ nome }}" {% if nome in (trilhas_confirmadas |
+                map(attribute='trilha' ) | list) %} checked {% endif %}>
+            {{ nome }}
+        </label>
+        <br>
+        {% endif %}
+        {% endfor %}
+
+        <br>
+        <button type="submit">Confirmar trilhas selecionadas</button>
+
+    </form>
+
+    {% if decisao and decisao.confirmado %}
+    <p>Decisão do analista: confirmada.</p>
+    {% else %}
+    <p>Aguardando confirmação do analista.</p>
+    {% endif %}
+
+
+
+
+</body>
+
+</html>

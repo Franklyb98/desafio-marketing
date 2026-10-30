@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Histórico de envios</title>
+   
+</head>
+<body>
+    <p><a href="/historico">Consultar histórico de simulações</a></p>
+
+    <a href="/agendamentos">← Voltar para agendamentos</a>
+
+    <h1>Histórico de simulações</h1>
+
+    {% for item in historico %}
+        <div>
+            <h3>{{ item.nome_completo }}</h3>
+
+            <p>Trilha: {{ item.trilha }}</p>
+            <p>Mensagem: {{ item.mensagem }}</p>
+            <p>Telefone: {{ item.telefone }}</p>
+            <p>Data: {{ item.data_simulacao }}</p>
+            <p>Status: {{ item.status }}</p>
+
+            <details>
+                <summary>Ver requisição simulada</summary>
+
+                <p>Endpoint: {{ item.endpoint }}</p>
+                <p>Método: {{ item.metodo }}</p>
+
+                <h4>Headers</h4>
+                <pre>{{ item.headers_json }}</pre>
+
+                <h4>Body</h4>
+                <pre>{{ item.body_json }}</pre>
+            </details>
+        </div>
+        <hr>
+    {% else %}
+        <p>Nenhuma simulação registrada.</p>
+    {% endfor %}
+
+</body>
+</html>
