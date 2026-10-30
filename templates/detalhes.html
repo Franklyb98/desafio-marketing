@@ -1,78 +1,202 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
-    <title>Detalhes do cliente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do cliente | Marketing Insights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-    <a href="/">← Voltar para clientes</a>
+    <div class="container">
 
-    <h1>{{ cliente.nome_completo }}</h1>
+        <header class="dashboard-header">
+            <div>
+                <h1>Marketing Insights</h1>
+                <p>Detalhamento e classificação de clientes</p>
+            </div>
 
-    <h2>Dados do cliente</h2>
+            <nav class="navigation">
+                <a href="/">Clientes</a>
+                <a href="/agendamentos">Agendamentos</a>
+                <a href="/historico">Histórico</a>
+            </nav>
+        </header>
 
-    <p><strong>ID:</strong> {{ cliente.id }}</p>
-    <p><strong>Idade:</strong> {{ cliente.idade }}</p>
-    <p><strong>Sexo:</strong> {{ cliente.sexo }}</p>
-    <p><strong>Estado:</strong> {{ cliente.estado }}</p>
-    <p><strong>Telefone:</strong> {{ cliente.telefone }}</p>
-    <p><strong>Valor total:</strong> R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}</p>
-    <p><strong>Quantidade de itens:</strong> {{ cliente.quantidade_total_itens }}</p>
-
-    <hr>
-
-
-    <h2>Trilhas sugeridas e confirmação</h2>
-
-    <form method="POST" action="/cliente/{{ cliente.id }}/confirmar">
-
-        {% for trilha in trilhas %}
-        <div>
-            <label>
-                <input type="checkbox" name="trilhas" value="{{ trilha.trilha }}" {% if trilha.trilha in
-                    (trilhas_confirmadas | map(attribute='trilha' ) | list) or (not decisao and not trilhas_confirmadas)
-                    %} checked {% endif %}>
-                <strong>{{ trilha.trilha }}</strong>
-            </label>
-
-            <p>Prioridade: {{ trilha.prioridade }}</p>
-            <p>Motivo: {{ trilha.motivo }}</p>
+        <div class="breadcrumb">
+            <a href="/">Clientes</a>
+            <span>/</span>
+            <span>Detalhes do cliente</span>
         </div>
-        <hr>
-        {% endfor %}
 
-        <h3>Adicionar outras trilhas</h3>
+        <section class="welcome-section">
+            <h2>{{ cliente.nome_completo }}</h2>
+            <p>Identificação do cliente #{{ cliente.id }}</p>
+        </section>
 
-        {% set existentes = trilhas | map(attribute='trilha') | list %}
+        <!-- Status da decisão -->
+        <section class="decision-status">
+            {% if decisao and decisao.confirmado %}
+                <span class="status-indicator status-confirmed">
+                    Decisão confirmada
+                </span>
+                <p>As trilhas selecionadas foram confirmadas pelo analista.</p>
+            {% else %}
+                <span class="status-indicator status-pending">
+                    Aguardando confirmação
+                </span>
+                <p>Revise as trilhas sugeridas antes de confirmar.</p>
+            {% endif %}
+        </section>
 
-        {% for nome in ["Alto valor", "Compra em quantidade", "Incentivo", "Público jovem", "Geral"] %}
-        {% if nome not in existentes %}
-        <label>
-            <input type="checkbox" name="trilhas" value="{{ nome }}" {% if nome in (trilhas_confirmadas |
-                map(attribute='trilha' ) | list) %} checked {% endif %}>
-            {{ nome }}
-        </label>
-        <br>
-        {% endif %}
-        {% endfor %}
+        <!-- Dados do cliente -->
+        <section class="card">
+            <div class="section-header">
+                <h2>Dados do cliente</h2>
+                <p>Informações pessoais e comportamento de compra.</p>
+            </div>
 
-        <br>
-        <button type="submit">Confirmar trilhas selecionadas</button>
+            <div class="details-grid">
 
-    </form>
+                <div class="detail-item">
+                    <span>ID</span>
+                    <strong>#{{ cliente.id }}</strong>
+                </div>
 
-    {% if decisao and decisao.confirmado %}
-    <p>Decisão do analista: confirmada.</p>
-    {% else %}
-    <p>Aguardando confirmação do analista.</p>
-    {% endif %}
+                <div class="detail-item">
+                    <span>Idade</span>
+                    <strong>{{ cliente.idade }} anos</strong>
+                </div>
 
+                <div class="detail-item">
+                    <span>Sexo</span>
+                    <strong>{{ cliente.sexo }}</strong>
+                </div>
 
+                <div class="detail-item">
+                    <span>Estado</span>
+                    <strong>{{ cliente.estado }}</strong>
+                </div>
 
+                <div class="detail-item">
+                    <span>Telefone</span>
+                    <strong>{{ cliente.telefone }}</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Valor total</span>
+                    <strong class="highlight-value">
+                        R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}
+                    </strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Quantidade de itens</span>
+                    <strong>{{ cliente.quantidade_total_itens }}</strong>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Classificação -->
+        <section class="card">
+
+            <div class="section-header">
+                <h2>Classificação de marketing</h2>
+                <p>
+                    Selecione as trilhas que devem ser utilizadas
+                    nas campanhas deste cliente.
+                </p>
+            </div>
+
+            <form method="POST" action="/cliente/{{ cliente.id }}/confirmar">
+
+                <div class="tracks-grid">
+
+                    {% for trilha in trilhas %}
+                    <label class="track-card">
+
+                        <div class="track-heading">
+                            <div class="track-selection">
+                                <input
+                                    type="checkbox"
+                                    name="trilhas"
+                                    value="{{ trilha.trilha }}"
+                                    {% if trilha.trilha in (trilhas_confirmadas | map(attribute='trilha') | list) or (not decisao and not trilhas_confirmadas) %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <strong>{{ trilha.trilha }}</strong>
+                            </div>
+
+                            <span class="priority-badge">
+                                Prioridade {{ trilha.prioridade }}
+                            </span>
+                        </div>
+
+                        <p class="track-reason">
+                            {{ trilha.motivo }}
+                        </p>
+
+                    </label>
+                    {% endfor %}
+
+                </div>
+
+                <div class="additional-tracks">
+
+                    <h3>Adicionar outras trilhas</h3>
+                    <p>Você também pode selecionar trilhas que não foram sugeridas automaticamente.</p>
+
+                    {% set existentes = trilhas | map(attribute='trilha') | list %}
+
+                    <div class="additional-list">
+
+                        {% for nome in ["Alto valor", "Compra em quantidade", "Incentivo", "Público jovem", "Geral"] %}
+
+                            {% if nome not in existentes %}
+
+                                <label class="additional-option">
+                                    <input
+                                        type="checkbox"
+                                        name="trilhas"
+                                        value="{{ nome }}"
+                                        {% if nome in (trilhas_confirmadas | map(attribute='trilha') | list) %}
+                                            checked
+                                        {% endif %}
+                                    >
+                                    {{ nome }}
+                                </label>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit">
+                        Confirmar trilhas selecionadas
+                    </button>
+
+                    <a href="/" class="cancel-link">Voltar sem salvar</a>
+                </div>
+
+            </form>
+
+        </section>
+
+        <footer class="dashboard-footer">
+            <p>Marketing Insights | Sistema de campanhas de marketing</p>
+        </footer>
+
+    </div>
 
 </body>
-
 </html>

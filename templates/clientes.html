@@ -1,67 +1,168 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
-    <title>Clientes - Marketing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | Marketing Insights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-    <h1>Clientes cadastrados</h1>
-    <p>
-        <a href="/agendamentos">Vizualizar próximos envios</a>
-    </p>
+    <div class="container">
 
-    <form method="GET">
-        <label for="trilha">Filtrar por trilha:</label>
+        <!-- Cabeçalho -->
+        <header class="dashboard-header">
+            <div>
+                <h1>Marketing Insights</h1>
+                <p>Gerenciamento e segmentação de clientes</p>
+            </div>
 
-        <select name="trilha" id="trilha">
-            <option value="">Todas as trilhas</option>
-            <option value="Alto valor">Alto valor</option>
-            <option value="Compra em quantidade">Compra em quantidade</option>
-            <option value="Incentivo">Incentivo</option>
-            <option value="Público jovem">Público jovem</option>
-            <option value="Geral">Geral</option>
-        </select>
+            <nav class="navigation">
+                <a href="/" class="nav-active">Clientes</a>
+                <a href="/agendamentos">Agendamentos</a>
+                <a href="/historico">Histórico</a>
+            </nav>
+        </header>
 
-        <button type="submit">Filtrar</button>
-    </form>
+        <!-- Apresentação -->
+        <section class="welcome-section">
+            <h2>Painel de clientes</h2>
+            <p>Acompanhe os clientes e suas classificações de marketing.</p>
+        </section>
 
-    <hr>
+        <!-- Indicadores -->
+        <section class="stats-grid">
 
-    <table border="1" cellpadding="8">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Idade</th>
-                <th>Estado</th>
-                <th>Valor total</th>
-                <th>Itens</th>
-            </tr>
-        </thead>
+            <div class="stat-card">
+                <span class="stat-label">Clientes exibidos</span>
+                <h2>{{ clientes|length }}</h2>
+                <span class="stat-description">Registros encontrados</span>
+            </div>
 
-        <tbody>
-            {% for cliente in clientes %}
-            <tr>
-                <td>{{ cliente.id }}</td>
-                <td>
-                    <a href="/cliente/{{ cliente.id }}">
-                        {{ cliente.nome_completo }}
-                    </a>
-                </td>
-                <td>{{ cliente.idade }}</td>
-                <td>{{ cliente.estado }}</td>
-                <td>R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}</td>
-                <td>{{ cliente.quantidade_total_itens }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <div class="stat-card">
+                <span class="stat-label">Filtro atual</span>
+                <h2 class="stat-filter">
+                    {{ request.args.get('trilha') or 'Todas' }}
+                </h2>
+                <span class="stat-description">Segmentação selecionada</span>
+            </div>
 
-    <p>Total de clientes exibidos: {{ clientes|length }}</p>
+        </section>
+
+        <!-- Filtros -->
+        <section class="card">
+
+            <div class="section-header">
+                <div>
+                    <h2>Clientes cadastrados</h2>
+                    <p>Utilize os filtros para localizar os clientes.</p>
+                </div>
+            </div>
+
+            <form method="GET" class="filter-form">
+
+                <div class="filter-field">
+                    <label for="trilha">Filtrar por trilha</label>
+
+                    <select name="trilha" id="trilha">
+                        <option value="">Todas as trilhas</option>
+
+                        <option value="Alto valor"
+                            {% if request.args.get('trilha') == 'Alto valor' %}selected{% endif %}>
+                            Alto valor
+                        </option>
+
+                        <option value="Compra em quantidade"
+                            {% if request.args.get('trilha') == 'Compra em quantidade' %}selected{% endif %}>
+                            Compra em quantidade
+                        </option>
+
+                        <option value="Incentivo"
+                            {% if request.args.get('trilha') == 'Incentivo' %}selected{% endif %}>
+                            Incentivo
+                        </option>
+
+                        <option value="Público jovem"
+                            {% if request.args.get('trilha') == 'Público jovem' %}selected{% endif %}>
+                            Público jovem
+                        </option>
+
+                        <option value="Geral"
+                            {% if request.args.get('trilha') == 'Geral' %}selected{% endif %}>
+                            Geral
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit">Aplicar filtro</button>
+
+                <a href="/" class="clear-filter">Limpar filtros</a>
+
+            </form>
+
+            <!-- Tabela -->
+            <div class="table-container">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do cliente</th>
+                            <th>Idade</th>
+                            <th>Estado</th>
+                            <th>Valor total</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>#{{ cliente.id }}</td>
+
+                            <td>
+                                <a href="/cliente/{{ cliente.id }}" class="client-link">
+                                    {{ cliente.nome_completo }}
+                                </a>
+                            </td>
+
+                            <td>{{ cliente.idade }}</td>
+                            <td>{{ cliente.estado }}</td>
+
+                            <td>
+                                R$ {{ "%.2f"|format(cliente.valor_total_carrinhos) }}
+                            </td>
+
+                            <td>{{ cliente.quantidade_total_itens }}</td>
+                        </tr>
+
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                Nenhum cliente encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+
+            <p class="table-footer">
+                Exibindo {{ clientes|length }} cliente(s).
+            </p>
+
+        </section>
+
+        <footer class="dashboard-footer">
+            <p>Marketing Insights | Sistema de campanhas de marketing</p>
+        </footer>
+
+    </div>
 
 </body>
-
 </html>
+
