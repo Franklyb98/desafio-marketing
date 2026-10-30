@@ -3,6 +3,7 @@ import sqlite3
 import json
 from pathlib import Path
 from collections import defaultdict
+from contextlib import closing
 
 
 CAMINHO_BANCO = Path("data") / "clientes.db"
@@ -15,36 +16,61 @@ def conectar_banco():
 
 
 def criar_tabela_clientes():
-    with conectar_banco() as conexao:
-        conexao.execute("""
-            CREATE TABLE IF NOT EXISTS clientes (
-                id INTEGER PRIMARY KEY,
-                nome_completo TEXT NOT NULL,
-                idade INTEGER,
-                sexo TEXT,
-                estado TEXT,
-                telefone TEXT,
-                valor_total_carrinhos REAL DEFAULT 0,
-                quantidade_total_itens INTEGER DEFAULT 0
-            )
-        """)
+    with closing(conectar_banco()) as conexao:
+        with conexao:
+            conexao.execute("""
+                CREATE TABLE IF NOT EXISTS clientes (
+                    id INTEGER PRIMARY KEY,
+                    nome_completo TEXT NOT NULL,
+                    idade INTEGER,
+                    sexo TEXT,
+                    estado TEXT,
+                    telefone TEXT,
+                    valor_total_carrinhos REAL DEFAULT 0,
+                    quantidade_total_itens INTEGER DEFAULT 0
+                )
+            """)
+
 
 
 def localizar_arquivos():
+    if not PASTA_RAW.exists():
+        raise FileNotFoundError(
+            "A pasta data/raw não foi encontrada. Execute primeiro extraction.py."
+        )
+
     pastas = sorted(
         (pasta for pasta in PASTA_RAW.iterdir() if pasta.is_dir()),
         reverse=True
     )
 
     for pasta in pastas:
-        arquivos_clientes = sorted(pasta.glob("clientes_*.json"), reverse=True)
-        arquivos_carrinhos = sorted(pasta.glob("carrinhos_*.json"), reverse=True)
+        arquivos_clientes = {
+            arquivo.stem.removeprefix("clientes_"): arquivo
+            for arquivo in pasta.glob("clientes_*.json")
+        }
 
-        if arquivos_clientes and arquivos_carrinhos:
-            return arquivos_clientes[0], arquivos_carrinhos[0]
+        arquivos_carrinhos = {
+            arquivo.stem.removeprefix("carrinhos_"): arquivo
+            for arquivo in pasta.glob("carrinhos_*.json")
+        }
+
+        horarios_comuns = sorted(
+            set(arquivos_clientes) & set(arquivos_carrinhos),
+            reverse=True
+        )
+
+        if horarios_comuns:
+            horario = horarios_comuns[0]
+
+            return (
+                arquivos_clientes[horario],
+                arquivos_carrinhos[horario]
+            )
 
     raise FileNotFoundError(
-        "Não foram encontrados JSONs de clientes e carrinhos em data/raw."
+        "Não foram encontrados arquivos de clientes e carrinhos "
+        "com o mesmo horário em data/raw."
     )
 
 
@@ -65,40 +91,41 @@ def consolidar_carrinhos(carrinhos):
 
 
 def inserir_clientes(clientes, totais):
-    with conectar_banco() as conexao:
-        for cliente in clientes:
-            user_id = cliente["id"]
-            total = totais[user_id]
+    with closing(conectar_banco()) as conexao:
+        with conexao:
+            for cliente in clientes:
+                user_id = cliente["id"]
+                total = totais[user_id]
 
-            nome_completo = (
-                f"{cliente['firstName']} "
-                f"{cliente['lastName']}"
-            )
-
-            conexao.execute("""
-                INSERT INTO clientes (
-                    id, nome_completo, idade, sexo, estado, telefone,
-                    valor_total_carrinhos, quantidade_total_itens
+                nome_completo = (
+                    f"{cliente['firstName']} "
+                    f"{cliente['lastName']}"
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    nome_completo = excluded.nome_completo,
-                    idade = excluded.idade,
-                    sexo = excluded.sexo,
-                    estado = excluded.estado,
-                    telefone = excluded.telefone,
-                    valor_total_carrinhos = excluded.valor_total_carrinhos,
-                    quantidade_total_itens = excluded.quantidade_total_itens
-            """, (
-                user_id,
-                nome_completo,
-                cliente.get("age"),
-                cliente.get("gender"),
-                cliente.get("address", {}).get("state"),
-                cliente.get("phone"),
-                total["valor"],
-                total["itens"]
-            ))
+
+                conexao.execute("""
+                    INSERT INTO clientes (
+                        id, nome_completo, idade, sexo, estado, telefone,
+                        valor_total_carrinhos, quantidade_total_itens
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        nome_completo = excluded.nome_completo,
+                        idade = excluded.idade,
+                        sexo = excluded.sexo,
+                        estado = excluded.estado,
+                        telefone = excluded.telefone,
+                        valor_total_carrinhos = excluded.valor_total_carrinhos,
+                        quantidade_total_itens = excluded.quantidade_total_itens
+                """, (
+                    user_id,
+                    nome_completo,
+                    cliente.get("age"),
+                    cliente.get("gender"),
+                    cliente.get("address", {}).get("state"),
+                    cliente.get("phone"),
+                    total["valor"],
+                    total["itens"]
+                ))
 
 
 def main():
@@ -113,10 +140,11 @@ def main():
 
     inserir_clientes(dados_clientes["users"], totais)
 
-    with conectar_banco() as conexao:
-        quantidade = conexao.execute(
-            "SELECT COUNT(*) FROM clientes"
-        ).fetchone()[0]
+    with closing(conectar_banco()) as conexao:
+        with conexao:
+            quantidade = conexao.execute(
+                "SELECT COUNT(*) FROM clientes"
+            ).fetchone()[0]
 
     print(f"Clientes cadastrados no banco: {quantidade}")
 
